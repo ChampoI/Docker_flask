@@ -18,5 +18,10 @@ services:
       - db
     depends_on: 
       - db
+  api-faker:
+    build: ./faker
+    ports:
+      - "5005:80"
+
 volumes:
   postgres_data:

@@ -3,49 +3,45 @@ from typing import Optional
 import uvicorn
 from db import engine,connection_db,conn
 from sqlalchemy import func, select
+import requests
+import json
 
-"""app = FastAPI()
-from models import *
-@app.get('/hello')
-def hello():
-    return {"respuesta":'hola'}
-
-@app.get('/datos_faker')
-def datos():
-    a = conn.execute(datos_falsos.select()).fetchall()
-    return {"respuesta":a}
-
-@app.get('/insert_data')
-def insert_data():
-    new_data = {"name": "pacho", "email": "pacho@gmail.com"}
-    result = conn.execute(datos_falsos.insert().values(new_data))
-    return {"respuesta":"asdasdasd"} """
 app = FastAPI()
 
 from models import *
-@app.route('/crear_registros')
+@app.get('/crear_registros')
 def crear_registros():
-    url = 'http://faker-service/datos'
+    url = 'http://api-faker/datos'
     response = requests.get(url)
     response_json = json.loads(response.text)
-    for i in response_json["datos"]:
-        data = DataFaker(nombre=i["name"],ciudad=i["city"],direccion=i["address"],telefono=i["phone_number"])
-        db.session.add(data)
-    db.session.commit()
+    for i in response_json:
+        new_data = {"first_name":i["first_name"],"country":i["country"],"day_of_month":i["day_of_month"],"day_of_week":i["day_of_week"],"word":i["word"]}
+        with engine.connect() as con:
+            con.execute(datos_falsos.insert().values(new_data))
     return {'data':"Registros creados"}
 
-@app.route('/registros_faker')
-def registros_faker():
+@app.get('/registros_falsos')
+def registros_falsos():
     with engine.connect() as con:
         obtener_data = "select * from datos_falsos"
         respuesta_data = con.execute(obtener_data)
         lista = list()
         for i in respuesta_data:
             data = dict()
-            data["name"] = i[1]
-            data["ciudad"] = i[3]
-            data["direccion"] = i[4]
-            data["telefono"] = i[5]
+            data["first_name"] = i[1]
+            data["day_of_month"] = i[2]
+            data["day_of_week"] = i[3]
+            data["country"] = i[4]
+            data["word"] = i[5]
             lista.append(data)
         return {'data':lista}
 
+@app.get('/eliminar_registros')
+def eliminar_registros():
+    with engine.connect() as con:
+        eliminar_data = "delete from datos_falsos"
+        try:
+            respuesta_data = con.execute(eliminar_data)
+        except:
+            return {"respuesta":"Data no eliminada , validar "}        
+        return {"respuesta":"Data Eliminada"}
