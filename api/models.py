@@ -26,7 +26,6 @@ datos_falsos = Table(
     Column("day_of_week", String(255)),
     Column("country", String(255)),
     Column("word", String(255)),
-
 )
 
 meta.create_all(engine)
